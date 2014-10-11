@@ -2,6 +2,19 @@
 * Styles for the map part of the frontend by Kirill Zhuravlev
 */
 
-body{
-    background: lightgray;
+#map-div{
+    position: absolute;
+    top:0;
+    width: 70%;
+    bottom: 0;
+    left: 0;
+}
+
+#filter{
+    position: absolute;
+    top:0;
+    right:0;
+    bottom:0;
+    width: 30%;
+    padding: 0 25px;
 }

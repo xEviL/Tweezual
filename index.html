@@ -19,19 +19,32 @@
     <![endif]-->
 </head>
 <body>
-<h1>Hello, Bootstrap 3, Leaflet and Mapbox</h1>
 
-<!-- mapbox map access id: xevil.jo1368ad -->
-<a href="#" class="btn-success btn-sm"><span class="glyphicon glyphicon-bullhorn"></span></a>
+<!-- map container -->
+<div id="map-div"></div>
 
-<div id="map-div" style="width: 1400px; height: 800px; border: 1px red dashed"></div>
+<!-- filter -->
+<div id="filter">
+    <h2>Tweets on the map</h2>
+    <input type="text" placeholder="Keyword" />
+    <a class="btn btn-sm btn-warning"><span class="glyphicon glyphicon-play"></span></a>
+    <div id="filter-list">
+        <div class="stream">
 
+        </div>
+    </div>
+</div>
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>-->
 <!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="./js/bootstrap.min.js"></script>
 <script src="./js/lib/leaflet.js"></script>
+<script src="./js/lib/webgl-heatmap.js"></script>
+<script src="./js/lib/webgl-heatmap-leaflet.js"></script>
 <script src="./js/map-and-tweets.js"></script>
+<!--TODO: consider WebWorker for this thing -->
+<script src="./js/filter-and-streaming.js"></script>
 </body>
 </html>
