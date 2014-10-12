@@ -13,8 +13,6 @@ package models;
  * limitations under the License.
  **/
 
-import org.json.JSONObject;
-import org.json.JSONException;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
 import com.twitter.hbc.core.Constants;
@@ -29,16 +27,22 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import play.libs.Json;
-
 public class FilterStream {
-  public static Client client;
-  public static boolean streaming = false;
-  public static int msgCnt = 0;
 
-  public static void run(String consumerKey, String consumerSecret, String token, String secret, String hashtag,
-                         play.mvc.WebSocket.Out<String> out) throws InterruptedException, JSONException {
-    BlockingQueue<String> queue = new LinkedBlockingQueue<String>(10000);
+  private final static String consumerKey = "yc77Duzt5LxrEiJkZ7r89PviZ";
+  private final static String consumerSecret = "OfS7sY0B7wm3O5S775ur28AvGmsJRk0xO9opyuWmg7xRsou6r6";
+  private final static String accessToken = "2822320870-zXEAiFIPqfR6nZxtgxqvekwZGspU9zIk76zSPLj";
+  private final static String accessTokenSecret = "fIY94IvdWwjaymOqicT3F51HrzqFZJz4WanxXZtOlCiuv";
+  private Client client;
+  private int msgCnt = 0;
+
+  public List<IntoWebsocketReader> iwrs = new ArrayList<>();
+  public BlockingQueue<String> queue;
+
+  private FilterStream(){
+    instance = this;
+    System.out.println("Looks like stream is not running, need some plumbing here!");
+    queue = new LinkedBlockingQueue<String>(10000);
     StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
     //endpoint.trackTerms(Lists.newArrayList("twitterapi", hashtag)); // Doesn't really work
     List<Location> locs = new ArrayList<>();
@@ -46,75 +50,59 @@ public class FilterStream {
     endpoint.locations(locs);
     endpoint.filterLevel(Constants.FilterLevel.None);
 
-    Authentication auth = new OAuth1(consumerKey, consumerSecret, token, secret);
+    Authentication auth = new OAuth1(consumerKey, consumerSecret, accessToken, accessTokenSecret);
     // Authentication auth = new BasicAuth(username, password);
 
     // Create a new BasicClient. By default gzip is enabled.
     client = new ClientBuilder()
-            .hosts(Constants.STREAM_HOST)
-            .endpoint(endpoint)
-            .authentication(auth)
-            .processor(new StringDelimitedProcessor(queue))
-            .build();
+        .hosts(Constants.STREAM_HOST)
+        .endpoint(endpoint)
+        .authentication(auth)
+        .processor(new StringDelimitedProcessor(queue))
+        .build();
+    System.out.println("Stream has been set up");
 
-    // Establish a connection
+    // Create dispatcher
+    new Thread(new TweetDispatch(queue,iwrs)).start();
+
+    // Start the stream
     client.connect();
-    streaming = true;
-
-    System.out.println("keyword: "+hashtag);
-
-    // Do whatever needs to be done with messages
-    while (streaming && msgCnt++ < 10000){
-      String msg = queue.take();
-      //System.out.println(msg);
-      //out.write(msg);
-      if (msgCnt % 1000 == 0)
-        System.out.println(msgCnt);
-      String res = processTweet(msg, hashtag);
-      if (res!=null) out.write(res);
-    }
+  }
+  private static FilterStream instance;
+  public static FilterStream getInstance(){
+    return instance == null ? new FilterStream() : instance;
+  }
+  public void stopClient(){
     client.stop();
   }
 
+  private class TweetDispatch implements Runnable{
+    private List<IntoWebsocketReader> iwrs;
+    private BlockingQueue<String> queue;
+    private int msgCnt = 0;
 
-
-  public static void stopClient(){
-    streaming = false;
-    client.stop();
-  }
-
- static String processTweet(String tweetJson, String keyword) throws JSONException {
-    // Parse
-
-    JSONObject tweet = new JSONObject(tweetJson);
-
-    // Filter
-    if (keyword.length() > 0 && !tweet.getString("text").contains(keyword)){
-      return null;
+    public TweetDispatch(BlockingQueue<String> queue,List<IntoWebsocketReader> iwrs){
+      this.iwrs = iwrs;
+      this.queue = queue;
     }
 
-    // Extract
-
-
-    // Serialize
-    /*
-    String excerptJson = "{"
-        + "\"coordinates\":"+tweet.getJSONObject("coordinates")+","
-        + "\"geo\":"+tweet.getJSONObject("geo")+","
-        + "\"place\":"+tweet.getJSONObject("place")
-        + "}";
-    System.out.println("Extracted = " + excerptJson);
-    return excerptJson;
-    */
-
-    JSONObject out = new JSONObject();
-    out.put("coordinates",tweet.get("coordinates"));
-    out.put("geo",tweet.get("geo"));
-    out.put("place",tweet.get("place"));
-    out.put("timestamp_ms",tweet.get("timestamp_ms"));
-
-    // Serialize
-    //System.out.println("Extracted = " + out.toString());
-    return out.toString();
+    @Override
+    public void run() {
+      System.out.println("Tweet Dispatch here!");
+      try {
+        while (true){
+          String tweet = queue.take();
+          if (++msgCnt % 10 == 0){
+            System.out.println(msgCnt);
+          }
+          for(IntoWebsocketReader iwr:iwrs){
+            iwr.queue.add(tweet);
+          }
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      System.out.println("Tweet Dispatch is going down :(");
+    }
   }
 }
