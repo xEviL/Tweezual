@@ -16,3 +16,5 @@ libraryDependencies ++= Seq(
 libraryDependencies += "com.twitter" % "hbc-core" % "2.2.0"
 
 libraryDependencies += "com.twitter" % "hbc" % "2.2.0"
+
+libraryDependencies += "org.json" % "json" % "20140107"
