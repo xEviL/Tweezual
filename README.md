@@ -1,4 +1,5 @@
-ZH14_TwitViz
+Tweezual HackZurich 2014 
 ============
+Tweets on the map!
 
-Twitter Vizualization Project for HackZurich
+
