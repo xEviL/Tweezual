@@ -51,11 +51,20 @@ var streamTweets = function(keyword){
     send(keyword);
 };
 
+var openStream = function(){
+    heatmapMinus.clearData();
+    heatmapMinus.update();
+    heatmapPlus.clearData();
+    heatmapPlus.update();
+    streamTweets(d3.select("#keyword").node().value);
+};
+
 d3.select("#play")
-    .on("click",function(){
-        heatmapMinus.clearData();
-        heatmapMinus.update();
-        heatmapPlus.clearData();
-        heatmapPlus.update();
-        streamTweets(d3.select("#keyword").node().value);
+    .on("click",openStream);
+
+d3.select("#keyword")
+    .on("keypress",function(){
+        if (d3.event.keyCode == 13){
+            openStream();
+        }
     });

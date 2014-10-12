@@ -49,12 +49,15 @@ var requestFakeTweet = function(){
 //requestFakeTweet();
 
 // Decay
+// TODO: use requestAnimationFrame(...) !
 setInterval(function(){
     heatmapPlus.multiply(0.9);
     heatmapMinus.multiply(0.9);
     var smallOnesFilter = function(d){return d[2]>0.01;};
     heatmapPlus.data = heatmapPlus.data.filter(smallOnesFilter);
     heatmapMinus.data = heatmapMinus.data.filter(smallOnesFilter);
+    heatmapPlus.update();
+    heatmapMinus.update();
 },40);
 
 var addTweet = function(tweet){
